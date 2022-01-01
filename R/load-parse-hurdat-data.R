@@ -1,0 +1,117 @@
+#'  Fetch Best Tracks data from NOAA (HURDAT2)
+#' 
+#' This function is used to download, parse, and format the current tropical storm database
+#' (HURDAT2) from NOAA. The `src` parameter may need to be updated each year as the path
+#' to the input data is updated. Visit the NOAA website for full [data description](https://www.nhc.noaa.gov/data/#hurdat)
+#' and [metadata](https://www.nhc.noaa.gov/data/hurdat/hurdat2-format-nov2019.pdf) for the HURDAT2 database
+#' @examples
+#' # Download recent data from HURDAT2 (NOAA)
+#' path = 'hurdat_data.csv'
+#' fetch_best_tracks_data(path)
+#' 
+#' # load data for trackID AL142018 (Hurricane Michael)
+#' track = load_hurdat_track(path, trackID = 'AL142018')
+#' 
+#' # Retrieve a US shapefile and project to UTM16
+#' library(maptools)
+#' data("wrld_simpl")
+#' us = wrld_simpl['USA',]
+#' us = spTransform(us, '+init=epsg:32616')
+#' 
+#' output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
+#' raster::plot(output_raster)
+#' 
+#' @param path character: the path to output downloaded data (*.csv)
+#' @param src character: the path to most recent HURDAT2 Best tracks data. May need updating each year.
+#' @export
+fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hurdat/hurdat2-1851-2020-052921.txt') {
+  if(!dir.exists(dirname(path))) {
+    stop(paste0('directory', dirname(path), 'does not exist'))
+  }
+  cat('downloading best track data from\n', src)
+  data = readLines(src)
+  cat(' parsing track data')
+  parsed_data = list()
+  i=1
+  prog_yr = 1850
+  while(i <= length(data)) {
+    entry = data[i]
+    header = trimws(strsplit(entry, ',')[[1]])
+    track_id = header[1]
+    track_name = header[2]
+    rows_to_follow = as.numeric(header[3])
+    body = data[(i+1):(i+rows_to_follow)] 
+    body = strsplit(body, ',')
+    body = lapply(body, trimws)
+    body = lapply(body, function(x) x[1:20]) # Fix database error with extra comma
+    body = do.call(rbind,body)
+    colnames(body) = c('date','time',
+                       'record', 'status',
+                       'lat', 'lon',
+                       'max_speed', 'min_press',
+                       '34kt_ne', '34kt_se', '34kt_sw', '34kt_nw',
+                       '50kt_ne', '50kt_se', '50kt_sw', '50kt_nw',
+                       '64kt_ne', '64kt_se', '64kt_sw', '64kt_nw')
+    body = as.data.frame(body)
+    body$lat = ifelse(grepl('N', body$lat), gsub('N', '', body$lat), paste0('-',gsub('S', '', body$lat)))
+    body$lon = ifelse(grepl('E', body$lon), gsub('E', '', body$lon), paste0('-',gsub('W', '', body$lon)))
+    hd = data.frame(track_id = track_id, track_name = track_name)
+    track_info = cbind(hd, body)
+    parsed_data[[length(parsed_data)+1]] = track_info
+    curr_yr = substr(track_info$date[1],1,4)
+    i = i + rows_to_follow + 1
+    if(curr_yr != prog_yr) {
+      cat('year', prog_yr, 'complete\n')
+      prog_yr = curr_yr
+    }
+  }
+  cat('writing best tracks to disk\n', path,'\n')
+  out_data = do.call(rbind, parsed_data)
+  write.csv(out_data, path, row.names=FALSE)
+}
+
+#' Load Full Track and Return as Spatial Points Dataframe
+#' 
+#' This function returns an attributed shapefile containing tropical cyclone positions
+#' and attributes from HURDAT2 database.
+#' @examples
+#' #' # Download recent data from HURDAT2 (NOAA)
+#' path = 'hurdat_data.csv'
+#' fetch_best_tracks_data(path)
+#' 
+#' # load data for trackID AL142018 (Hurricane Michael)
+#' track = load_hurdat_track(path, trackID = 'AL142018')
+#' 
+#' # Retrieve a US shapefile and project to UTM16
+#' library(maptools)
+#' data("wrld_simpl")
+#' us = wrld_simpl['USA',]
+#' us = spTransform(us, '+init=epsg:32616')
+#' 
+#' output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
+#' raster::plot(output_raster)
+#' 
+#' @param path character: path to parsed HURDAT2 database downloaded using `fetch_best_tracks_data()`.
+#' @param trackID string: trackID from HURDAT database (e.g., AL122018 indicates Hurricane Michael, the twelfth Atlantic hurricane of the 2018 season)
+#' @param proj output CRS for Spatial Points Dataframe. Must be a projection coordinate system (e.g., UTM) for distance-based calculations
+#' @export
+load_hurdat_track = function(path, trackID, proj='+init=epsg:32616') {
+  db = read.csv(path)
+  if(length(trackID) > 1) stop('only one track_id allowed at a time')
+  missing = !trackID %in% db$track_id
+  if(!trackID %in% db$track_id) stop('track', trackID, '\nmissing or invalid')
+  length(db$track_id %in% trackID)
+  db = subset(db,  track_id %in% trackID)
+  colnames(db) = gsub('X*', '', colnames(db))
+  
+  coords = sp::coordinates(db[c('lon', 'lat')])
+  output = sp::SpatialPointsDataFrame(coords, db, proj4string=sp::CRS('+init=epsg:4326'))
+  output = sp::spTransform(output, sp::CRS(proj))
+  coords = sp::coordinates(output)
+  output$utmx = coords[,1]
+  output$utmy = coords[,2]
+  output$time = sprintf('%04d', output$time)
+  return(output)
+}
+
+

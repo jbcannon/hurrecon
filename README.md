@@ -40,5 +40,5 @@ sp::plot(us, add=TRUE)
  
 output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
 library(raster)
-plot(output_raster)
+plot(output_raster$Vs)
 ```

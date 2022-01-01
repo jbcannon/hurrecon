@@ -35,6 +35,8 @@ library(sp)
 data("wrld_simpl")
 us = wrld_simpl['USA',]
 us = spTransform(us, '+init=epsg:32616')
+sp::plot(track)
+sp::plot(us, add=TRUE)
  
 output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
 library(raster)

@@ -13,7 +13,7 @@ Next, you should be able to get the latest released version of `hurrecon` from g
 
 ```
 install.packages('devtools')
-devtools::install_github('jbcannon/hurrecon')`
+devtools::install_github('jbcannon/hurrecon')
 ```
 # Example Usage
 
@@ -39,5 +39,4 @@ us = spTransform(us, '+init=epsg:32616')
 output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
 library(raster)
 plot(output_raster)
-
-
+```

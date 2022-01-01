@@ -184,7 +184,7 @@ Vs = function(obs, proj, template, max_radius_km, res_m){
   
   #calculate radius and direction raster
   R = raster::distanceFromPoints(ex,eye)
-  pts = as.data.frame(rasterToPoints(ex))
+  pts = as.data.frame(raster::rasterToPoints(ex))
   pts$x = pts$x-eye$utmx
   pts$y = pts$y-eye$utmy
   pts = atan2(pts[,'y'], pts[,'x'])

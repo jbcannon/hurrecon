@@ -137,7 +137,20 @@ get_B_coeff = function(profile){
   return(list(coeff=x, profile=profile))
 }
 
-# Feed a single observation and get wind profiles in each quadrant
+#'  Return wind profile data from HURDAT2 observation
+#' 
+#' This function takes a single HURDAT2 observation retreived from `load_hurdat_track()`
+#' and returns a wind profileis used to download, parse, and format the current tropical storm database
+#' @examples
+#' # Download recent data from HURDAT2 (NOAA)
+#` hurdat_database = 'path/to/save/database.txt'
+#' fetch_best_tracks_data(hurdat_database)
+#' track = load_hurdat_track('AL142018') # Load data from hurricane Micahel
+#' observation = track[17,] #select a single observation to analyze
+#' get_wind_profiles(observation)
+#' @param obs SpatialPointsDataFrame: a single hurricane observation represented by
+#' a single row of an object returned from `load_hurdat_track()`
+#' @export
 get_wind_profiles = function(obs){
   #convert values to numeric then to metric
   for(i in grep('kt_|max_speed', colnames(obs@data), value = TRUE)){

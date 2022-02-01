@@ -187,7 +187,6 @@ get_wind_profiles = function(obs){
   return(list(summary=x, profiles=out2))
 }
 
-#' @export
 Vs = function(obs, proj, template, max_radius_km, res_m){
   # Create blank raster centered over eye
   eye = obs
@@ -268,7 +267,6 @@ cumulative_extent = function(track, res_m, max_radius_km){
   return(ex)
 }
 
-#' @export
 size_pred = function(dat) {
   load('radius_models.RData')
   press_known = ifelse(as.numeric(dat$min_press) > 0,'p','np')

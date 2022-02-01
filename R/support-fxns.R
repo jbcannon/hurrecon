@@ -187,6 +187,7 @@ get_wind_profiles = function(obs){
   return(list(summary=x, profiles=out2))
 }
 
+#' @export
 Vs = function(obs, proj, template, max_radius_km, res_m){
   # Create blank raster centered over eye
   eye = obs
@@ -255,7 +256,7 @@ Vs = function(obs, proj, template, max_radius_km, res_m){
   return(list(Vs=Vs,D=D))
 }
 
-
+#' @export
 cumulative_extent = function(track, res_m, max_radius_km){
   track = rgeos::gBuffer(track, width=max_radius_km*1000)
   trk_ext = raster::extent(track)
@@ -267,11 +268,6 @@ cumulative_extent = function(track, res_m, max_radius_km){
   return(ex)
 }
 
-#' This function may not work so I'm not going to fill this out really
-#' This really should just be an internal function
-#' @examples
-#' # You are on your own
-#' @param dat SpatialPointsDataFrame
 #' @export
 size_pred = function(dat) {
   load('radius_models.RData')

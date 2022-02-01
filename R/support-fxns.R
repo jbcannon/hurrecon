@@ -267,13 +267,11 @@ cumulative_extent = function(track, res_m, max_radius_km){
   return(ex)
 }
 
-#' Predict hurricane size using radius models from Cannon et al. XXXX
-#' 
 #' This function may not work so I'm not going to fill this out really
 #' This really should just be an internal function
 #' @examples
 #' # You are on your own
-#' @param dat Data, ok? 
+#' @param dat SpatialPointsDataFrame
 #' @export
 size_pred = function(dat) {
   load('radius_models.RData')
@@ -307,16 +305,14 @@ size_pred = function(dat) {
   return(out)
 }
 
-
 #'  Function to fit HURRECON wind profile as a function 
-#`
-#` This function will map relative wind profile based on 2 or 3 radius with known speed
-#' @examples
-#' radius = c(seq(0,1,by=0.01), seq(2,150,1))
-#' wind_profile_fxn(radius, Rm = 4, B=1.3)
-#' @param R numeric: vector of radii at which to return wind profile
-#' @param Rm numeric: Radius at which maximum wind speed occurs
-#' @param B numeric: Decay coefficient for wind profile. See Boose et al. 2004
-#' @export
+#'  This function will map relative wind profile based on 2 or 3 radius with known speed
+#'  @examples
+#'  radius = c(seq(0,1,by=0.01), seq(2,150,1))
+#'  wind_profile_fxn(radius, Rm = 4, B=1.3)
+#'  @param R numeric: vector of radii at which to return wind profile
+#'  @param Rm numeric: Radius at which maximum wind speed occurs
+#'  @param B numeric: Decay coefficient for wind profile. See Boose et al. 2004
+#'  @export
 wind_profile_fxn = function(R, Rm, B) sqrt((Rm/R)^B *exp(1- (Rm/R)^B)) # From Boose et al. 2004
 

@@ -267,6 +267,14 @@ cumulative_extent = function(track, res_m, max_radius_km){
   return(ex)
 }
 
+#' Predict hurricane size using radius models from Cannon et al. XXXX
+#' 
+#' This function may not work so I'm not going to fill this out really
+#' This really should just be an internal function
+#' @examples
+#' # You are on your own
+#' @param dat Data, ok? 
+#' @export
 size_pred = function(dat) {
   load('radius_models.RData')
   press_known = ifelse(as.numeric(dat$min_press) > 0,'p','np')

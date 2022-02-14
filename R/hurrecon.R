@@ -34,7 +34,14 @@
 #' to limit results for a specific spatial region (county, state, country, etc.). Must be
 #' in same projection as `trk`.
 #' @export
-hurrecon_run = function(trk, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1, proj = '+init=epsg:32616',aoi = NULL) {
+hurrecon_run = function(trk, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1, proj = '+init=epsg:32616',aoi = NULL, mods=radius_models) {
+  yr = as.numeric(substr(trk$track_id, 5,8)[1])
+  if(yr < 2004) {
+    size = size_pred(trk@data, mods)
+    trk@data[,colnames(size)] = size
+    cat('track is pre-2004, size estimated\n')
+  }
+  
   vars = grep('kt_', colnames(trk@data), value=TRUE)
   if(any(trk$record=='L')) {
     L_row = which(trk$record=='L')

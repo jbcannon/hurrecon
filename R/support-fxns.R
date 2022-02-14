@@ -267,35 +267,37 @@ cumulative_extent = function(track, res_m, max_radius_km){
   return(ex)
 }
 
-size_pred = function(dat) {
-  load('radius_models.RData')
+size_pred = function(dat, mods) {
+  if(!exists('radius_models')) {stop('must first run \`data("radius_models\")\`')}
   press_known = ifelse(as.numeric(dat$min_press) > 0,'p','np')
   
   df = dat[, c('max_speed', 'min_press', 'lat')]
-  df[, 1:3] = as.numeric(df[,1:3])
+  for(i in 1:3) df[, i] = as.numeric(df[,i])
   #predict inner-most windspeed
-  r34 = ifelse(df$max_speed>34, predict(mods[[1]][[press_known]], df),0)
-  r50 = ifelse(df$max_speed>50, predict(mods[[2]][[press_known]], df),0)
-  r64 = ifelse(df$max_speed>64, predict(mods[[3]][[press_known]], df),0)
+  r34 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>34, predict(mods[[1]][[press_known[i]]], df[i,]),0))
+  r50 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>50, predict(mods[[2]][[press_known[i]]], df[i,]),0))
+  r64 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>64, predict(mods[[3]][[press_known[i]]], df[i,]),0))
   
   # predict outwind speeds from inner if availabile
-  if(r64 > 0) r50 = 1.521*r64+15.834
-  if(r50 > 0) r34 = 1.707*r50+31.473
+  #sapply(r64, function(i) if(r64))
+  
+  r50 = sapply(1:length(r64), function(i) if(r64[i] > 0) 1.521*r64[i]+15.834 else r50[i])
+  r34 = sapply(1:length(r50), function(i) if(r50[i] > 0) 1.521*r50[i]+15.834 else r34[i])
   size = list(r34=r34, r50=r50, r64=r64)
   
   #apply assymtry factors
   assym = c(1.28, 1.11, 0.69, 0.91)
-  out = c()
-  colnams = c()
+  out = list()
   for(i in 1:3){
-    x = size[[i]] * assym
-    out = c(out, x)
-    colnams = c(colnams, paste0(substr(names(size)[i],2,3), 'kt_', c('ne', 'se','sw', 'nw')))
+      x = size[[i]]
+      x = do.call(rbind, lapply(x, function(i) i*assym))
+      x = as.data.frame(x)
+      colnams = paste0(substr(names(size)[i],2,3), 'kt_', c('ne', 'se','sw', 'nw'))
+      colnames(x) = colnams
+      out[[length(out)+1]] = x
   }
   
-  #format output
-  out = as.data.frame(t(out))
-  colnames(out) = colnams
+  out = do.call(cbind, out)
   return(out)
 }
 

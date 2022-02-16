@@ -45,9 +45,11 @@ hurrecon_run = function(trk, land=us, max_rad_km = 100, res_m = 500, max_interp_
   vars = grep('kt_', colnames(trk@data), value=TRUE)
   if(any(trk$record=='L')) {
     L_row = which(trk$record=='L')
-    for(i in L_row){
-      prior_row = trk[i-1,]
-      trk@data[i, vars] = prior_row@data[vars]
+    if(trk$max_speed[L_row] < 1) {
+      for(i in L_row){
+        prior_row = trk[i-1,]
+        trk@data[i, vars] = prior_row@data[vars]
+      }
     }
   }
   for(v in vars) trk[trk@data[,v] == -999,v] = 0

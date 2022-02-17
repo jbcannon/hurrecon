@@ -46,12 +46,12 @@ hurrecon = function(track_densif, res_m, max_radius_km){
   
 }
 
-
 find_densification = function(track_pts, max_dist_km){
   # Get maximum distance between points
   d = as.matrix(dist(sp::coordinates(track_pts)))
   d = d/1000
-  d = diag(d[-1,-ncol(d)]) #get distances between adjacent points
+  #get distances between adjacent points
+  d = ifelse(nrow(d)>2, diag(d[-1,-ncol(d)]), d[-1,-ncol(d)])
   densification_factor = ceiling(d/max_dist_km)
   return(densification_factor)
 }
@@ -80,12 +80,14 @@ densify = function(track_pts, factor, land, proj){
     out_df = do.call('cbind', out_df)
     out_pts[[length(out_pts)+1]] = out_df
   }
+  
   # merge all dataframes together
-  for(i in 2:length(out_pts)){
-    out_pts[[i]] = out_pts[[i]][-1,]
+  if(length(out_pts)==1) out_pts = out_pts[[1]] else {
+    for(i in 2:length(out_pts)){
+      out_pts[[i]] = out_pts[[i]][-1,]
+    }
+    out_pts = do.call(rbind, out_pts)
   }
-  out_pts = do.call(rbind, out_pts)
-  #out_pts = out_pts[, colnames(track_pts@data)]
   
   #convert to spdf
   coords = out_pts[, c('utmx', 'utmy')]

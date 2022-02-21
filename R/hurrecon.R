@@ -55,7 +55,7 @@ hurrecon_run = function(trk, land=us, max_rad_km = 100, res_m = 500, max_interp_
   for(v in vars) trk[trk@data[,v] == -999,v] = 0
   movement = get_Ha_Hv(trk)
   trk@data = cbind(trk@data, movement)
-  dens_fact = find_densification(trk, max_interp_dist_km)
+  dens_fact = find_densification(trk, max_interp_dist_km);
   track_densif = densify(trk, dens_fact, land, proj = proj)
   if(is.null(aoi)) {
     track_densif_aoi = track_densif

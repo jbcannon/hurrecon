@@ -51,8 +51,8 @@ find_densification = function(track_pts, max_dist_km){
   d = as.matrix(dist(sp::coordinates(track_pts)))
   d = d/1000
   #get distances between adjacent points
-  d = ifelse(nrow(d)>2, diag(d[-1,-ncol(d)]), d[-1,-ncol(d)])
-  densification_factor = ceiling(d/max_dist_km)
+  if(nrow(d)>2) {x = diag(d[-1,-ncol(d)])} else {x = d[-1,-ncol(d)]}
+  densification_factor = ceiling(x/max_dist_km)
   return(densification_factor)
 }
 

@@ -110,7 +110,7 @@ load_hurdat_track = function(path, trackID, proj=32616) {
   output$time = sprintf('%04d', output$time)
   #eventually  need to make everything work on sf and terra
   #but for now just port it back to sp
-  sf::as_Spatial(output) 
+  output = sf::as_Spatial(output) 
   return(output)
 }
 

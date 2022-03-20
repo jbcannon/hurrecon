@@ -22,6 +22,7 @@ get_Ha_Hv = function(t_spdf){
   return(t_spdf@data[, c('Ah', 'Vh')])
 }
 
+#' @export
 hurrecon = function(track_densif, res_m, max_radius_km){
   ext = suppressWarnings(cumulative_extent(track_densif, res_m = res_m, max_radius_km = max_radius_km))
   Vs_out = ext

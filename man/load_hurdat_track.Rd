@@ -4,7 +4,7 @@
 \alias{load_hurdat_track}
 \title{Load Full Track and Return as Spatial Points Dataframe}
 \usage{
-load_hurdat_track(path, trackID, proj = "+init=epsg:32616")
+load_hurdat_track(path, trackID, proj = 32616)
 }
 \arguments{
 \item{path}{character: path to parsed HURDAT2 database downloaded using \code{fetch_best_tracks_data()}.}

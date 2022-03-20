@@ -11,7 +11,8 @@ hurrecon_run(
   res_m = 500,
   max_interp_dist_km = 1,
   proj = "+init=epsg:32616",
-  aoi = NULL
+  aoi = NULL,
+  mods = radius_models
 )
 }
 \arguments{

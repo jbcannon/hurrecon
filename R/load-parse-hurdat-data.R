@@ -95,7 +95,7 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
 #' @param trackID string: trackID from HURDAT database (e.g., AL122018 indicates Hurricane Michael, the twelfth Atlantic hurricane of the 2018 season)
 #' @param proj output CRS for Spatial Points Dataframe. Must be a projection coordinate system (e.g., UTM) for distance-based calculations
 #' @export
-load_hurdat_track = function(path, trackID, proj='+init=epsg:32616') {
+load_hurdat_track = function(path, trackID, proj=32616) {
   db = read.csv(path)
   if(length(trackID) > 1) stop('only one track_id allowed at a time')
   missing = !trackID %in% db$track_id
@@ -104,13 +104,13 @@ load_hurdat_track = function(path, trackID, proj='+init=epsg:32616') {
   db = subset(db,  track_id %in% trackID)
   colnames(db) = gsub('X*', '', colnames(db))
   
-  coords = sp::coordinates(db[c('lon', 'lat')])
-  output = sp::SpatialPointsDataFrame(coords, db, proj4string=sp::CRS('+init=epsg:4326'))
-  output = sp::spTransform(output, sp::CRS(proj))
-  coords = sp::coordinates(output)
-  output$utmx = coords[,1]
-  output$utmy = coords[,2]
+  output = sf::st_as_sf(db, coords = c('lon', 'lat'), crs=4326)
+  output = sf::st_transform(output, crs = proj)
+  output[, c('utmx', 'utmy')] = sf::st_coordinates(output)
   output$time = sprintf('%04d', output$time)
+  #eventually  need to make everything work on sf and terra
+  #but for now just port it back to sp
+  sf::as_Spatial(output) 
   return(output)
 }
 

@@ -1,3 +1,4 @@
+#' @export
 get_Ha_Hv = function(t_spdf){
   t_spdf$dt = paste0(t_spdf$date, t_spdf$time)
   t_spdf$dt = as.POSIXct(t_spdf$dt, format= '%Y%m%d%H%M', tz = 'GMT')
@@ -189,6 +190,7 @@ get_wind_profiles = function(obs){
   return(list(summary=x, profiles=out2))
 }
 
+#' @export
 Vs = function(obs, proj, template, max_radius_km, res_m){
   # Create blank raster centered over eye
   eye = obs

@@ -3,25 +3,22 @@
 \name{wind_profile_fxn}
 \alias{wind_profile_fxn}
 \title{Function to fit HURRECON wind profile as a function
-This function will map relative wind profile based on 2 or 3 radius with known speed
-@examples
-radius = c(seq(0,1,by=0.01), seq(2,150,1))
-wind_profile_fxn(radius, Rm = 4, B=1.3)
-@param R numeric: vector of radii at which to return wind profile
-@param Rm numeric: Radius at which maximum wind speed occurs
-@param B numeric: Decay coefficient for wind profile. See Boose et al. 2004
-@export}
+This function will map relative wind profile based on 2 or 3 radius with known speed}
 \usage{
 wind_profile_fxn(R, Rm, B)
+}
+\arguments{
+\item{R}{numeric: vector of radii at which to return wind profile}
+
+\item{Rm}{numeric: Radius at which maximum wind speed occurs}
+
+\item{B}{numeric: Decay coefficient for wind profile. See Boose et al. 2004}
 }
 \description{
 Function to fit HURRECON wind profile as a function
 This function will map relative wind profile based on 2 or 3 radius with known speed
-@examples
+}
+\examples{
 radius = c(seq(0,1,by=0.01), seq(2,150,1))
 wind_profile_fxn(radius, Rm = 4, B=1.3)
-@param R numeric: vector of radii at which to return wind profile
-@param Rm numeric: Radius at which maximum wind speed occurs
-@param B numeric: Decay coefficient for wind profile. See Boose et al. 2004
-@export
 }

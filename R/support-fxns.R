@@ -305,14 +305,14 @@ size_pred = function(dat, mods) {
   return(out)
 }
 
-#'  Function to fit HURRECON wind profile as a function 
-#'  This function will map relative wind profile based on 2 or 3 radius with known speed
-#'  @examples
-#'  radius = c(seq(0,1,by=0.01), seq(2,150,1))
-#'  wind_profile_fxn(radius, Rm = 4, B=1.3)
-#'  @param R numeric: vector of radii at which to return wind profile
-#'  @param Rm numeric: Radius at which maximum wind speed occurs
-#'  @param B numeric: Decay coefficient for wind profile. See Boose et al. 2004
-#'  @export
+#' Function to fit HURRECON wind profile as a function 
+#' This function will map relative wind profile based on 2 or 3 radius with known speed
+#' @examples
+#' radius = c(seq(0,1,by=0.01), seq(2,150,1))
+#' wind_profile_fxn(radius, Rm = 4, B=1.3)
+#' @param R numeric: vector of radii at which to return wind profile
+#' @param Rm numeric: Radius at which maximum wind speed occurs
+#' @param B numeric: Decay coefficient for wind profile. See Boose et al. 2004
+#' @export
 wind_profile_fxn = function(R, Rm, B) sqrt((Rm/R)^B *exp(1- (Rm/R)^B)) # From Boose et al. 2004
 

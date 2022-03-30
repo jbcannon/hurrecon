@@ -6,19 +6,16 @@
 \usage{
 hurrecon_run(
   trk,
-  land = us,
   max_rad_km = 100,
   res_m = 500,
   max_interp_dist_km = 1,
-  proj = "+init=epsg:32616",
+  proj = "32616",
   aoi = NULL,
   mods = radius_models
 )
 }
 \arguments{
 \item{trk}{SpatialPointsDataFrame of single track data returned from \code{load_hurdat_track}}
-
-\item{land}{SpatialPolygons: This is spatial layer representing land. This is used to identify when the hurricane is on land to incorporate appropriate adjustment factors}
 
 \item{max_rad_km}{integer: maximum distance away from eye to model windspeed}
 
@@ -35,6 +32,8 @@ wind fields}
 \item{aoi}{area of interest, track locations outside of aoi are ignored. This can be used
 to limit results for a specific spatial region (county, state, country, etc.). Must be
 in same projection as \code{trk}.}
+
+\item{land}{SpatialPolygons: This is spatial layer representing land. This is used to identify when the hurricane is on land to incorporate appropriate adjustment factors}
 }
 \description{
 This function takes a single hurricane track from \code{load_hurdat_track} and

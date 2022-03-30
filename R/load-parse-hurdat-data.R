@@ -132,8 +132,3 @@ load_hurdat_track = function(path, trackID, proj=32616) {
     }
   return(output)
 }
-
-trk = load_hurdat_track('R:/landscape_ecology/projects/hurrisk/data/hurdat2-1851-2020.txt',
-                  'AL032004')
-
-

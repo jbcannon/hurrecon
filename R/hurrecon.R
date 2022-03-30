@@ -68,16 +68,18 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   return(hurrecon_out)
 }
 
-load('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/data/geographic.RData')
-load('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/data/radius_models.RData')
-source('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/R/support-fxns.R')
-source('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/R/load-parse-hurdat-data.R')
-max_rad_km = 10
-res_m = 1000
-max_interp_dist_km = 1000
-proj = '32616'
-aoi = NULL;
-mods=radius_models
-trk = load_hurdat_track('R:/landscape_ecology/projects/hurrisk/data/hurdat2-1851-2020.txt',
-                        'AL142018')
-out = hurrecon_run(trk)
+
+
+#load('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/data/geographic.RData')
+##load('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/data/radius_models.RData')
+#source('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/R/support-fxns.R')
+#source('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/R/load-parse-hurdat-data.R')
+#max_rad_km = 10
+#res_m = 1000
+#max_interp_dist_km = 1000
+#proj = '32616'
+#aoi = NULL;
+#mods=radius_models
+#hurrecon::fetch_best_tracks_data('C:/U
+#trk = load_hurdat_track('R:/landscape_ecology/projects/hurrisk/data/hurdat2-1851-2020.txt','AL142018')
+#out = hurrecon_run(trk)

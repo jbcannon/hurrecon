@@ -95,23 +95,45 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
 #' @param trackID string: trackID from HURDAT database (e.g., AL122018 indicates Hurricane Michael, the twelfth Atlantic hurricane of the 2018 season)
 #' @param proj output CRS for Spatial Points Dataframe. Must be a projection coordinate system (e.g., UTM) for distance-based calculations
 #' @export
+
 load_hurdat_track = function(path, trackID, proj=32616) {
-  db = read.csv(path)
-  if(length(trackID) > 1) stop('only one track_id allowed at a time')
-  missing = !trackID %in% db$track_id
-  if(!trackID %in% db$track_id) stop('track', trackID, '\nmissing or invalid')
-  length(db$track_id %in% trackID)
-  db = subset(db,  track_id %in% trackID)
-  colnames(db) = gsub('X*', '', colnames(db))
+  db = suppressMessages(readr::read_csv(path))
   
-  output = sf::st_as_sf(db, coords = c('lon', 'lat'), crs=4326)
+  if(length(trackID) > 1) stop('only one track_id allowed at a time')
+  valid = all(c('track_id', 'record', 'date', 'max_speed', 'status', 'lat') %in% colnames(db)) 
+  
+  if(!valid) stop('path does not appear to be valid HURDAT2 dataset. Use fetch_best_tracks_data() to download valid dataset')
+  missing = !trackID %in% db$track_id
+  
+  if(!trackID %in% db$track_id) stop('track', trackID, '\nmissing or invalid')
+  
+  crs_valid = !is.na(sf::st_crs(proj)$input)
+  if(!crs_valid) stop('proj = ', as.character(proj), ' invalid. Use EPSG code (e.g., 32616)')
+  
+  db = dplyr::filter(db,  track_id %in% trackID)
+  colnames(db) = stringr::str_replace(colnames(db), 'X*', '')
+  db[, c('lon2', 'lat2')] = db[, c('lon', 'lat')]
+  output = sf::st_as_sf(db, coords = c('lon2', 'lat2'), crs=4326)
   output = sf::st_transform(output, crs = proj)
   output[, c('utmx', 'utmy')] = sf::st_coordinates(output)
-  output$time = sprintf('%04d', output$time)
-  #eventually  need to make everything work on sf and terra
-  #but for now just port it back to sp
-  output = sf::as_Spatial(output) 
+  
+  # Check if there needs to be some gap filling
+  yr = max(as.numeric(stringr::str_sub(output$date,1,4)))
+  if(yr < 2004) {
+    cat('pre-2004 track requires gap filling\n')
+    output = size_pred(output)
+    } else {
+      # Do any rows need size prediction?
+      needs_pred = (apply(sf::st_drop_geometry(dplyr::select(output, dplyr::contains('34'))),1,function(i) all(i==-999)) & output$max_speed>34)
+      if(any(needs_pred)) {
+        cat('some size info missing, gap filling', sum(needs_pred), 'rows\n')
+        output = size_pred(output)
+      }
+    }
   return(output)
 }
+
+trk = load_hurdat_track('R:/landscape_ecology/projects/hurrisk/data/hurdat2-1851-2020.txt',
+                  'AL032004')
 
 

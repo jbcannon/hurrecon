@@ -34,34 +34,50 @@
 #' to limit results for a specific spatial region (county, state, country, etc.). Must be
 #' in same projection as `trk`.
 #' @export
-hurrecon_run = function(trk, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1, proj = '+init=epsg:32616',aoi = NULL, mods=radius_models) {
-  yr = as.numeric(substr(trk$track_id, 5,8)[1])
-  if(yr < 2004) {
-    size = size_pred(trk@data, mods)
-    trk@data[,colnames(size)] = size
-    cat('track is pre-2004, size estimated\n')
+hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1, proj = '32616',aoi = NULL, mods=radius_models) {
+  # check that track is valid
+  val = all(class(trk) == c('sf', 'tbl_df', 'tbl', 'data.frame'))
+  if(!val) stop('trk must be a valid sf object from load_hurdat_track')
+  
+  val = all(c('track_id', 'record', 'time', 'lon', '34kt_se') %in% colnames(trk))
+  if(!val) stop('trk does not appear to contain valid columns. Load track with load_hurdat_track')
+  
+  if(!'land' %in% ls()) {
+    cat('must run `data(\'geographic\')` to load land object')
+    data('geographic')
   }
   
-  vars = grep('kt_', colnames(trk@data), value=TRUE)
-  if(any(trk$record=='L')) {
-    L_row = which(trk$record=='L')
-    if(trk$max_speed[L_row] < 1) {
-      for(i in L_row){
-        prior_row = trk[i-1,]
-        trk@data[i, vars] = prior_row@data[vars]
-      }
-    }
-  }
-  for(v in vars) trk[trk@data[,v] == -999,v] = 0
+  # Check if there are missing values in size prediction
+  needs_pred = apply(dplyr::select(sf::st_drop_geometry(trk), contains('34') | contains('50') | contains('64')), 1, function(x) any(x<0)) & trk$max_speed >= 34
+  if(any(needs_pred)) stop('Missing size data in some tracks, us gap fill size information containng value -999')
+  vars = grep('kt_', colnames(trk), value=TRUE)
+  for(v in vars) trk[dplyr::pull(trk, v) == -999,v] = 0
+
+  #Add movement columns
   movement = get_Ha_Hv(trk)
-  trk@data = cbind(trk@data, movement)
+  trk = dplyr::bind_cols(trk, movement)
+  
   dens_fact = find_densification(trk, max_interp_dist_km);
-  track_densif = densify(trk, dens_fact, land, proj = proj)
+  track_densif = densify(trk, dens_fact, land)
   if(is.null(aoi)) {
     track_densif_aoi = track_densif
     } else {
-      track_densif_aoi = rgeos::intersect(track_densif, aoi)
+      track_densif_aoi = sp::st_intersect(track_densif, aoi)
     }
   hurrecon_out = hurrecon(track_densif_aoi, max_radius_km = max_rad_km, res_m = res_m)
   return(hurrecon_out)
 }
+
+load('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/data/geographic.RData')
+load('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/data/radius_models.RData')
+source('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/R/support-fxns.R')
+source('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/R/load-parse-hurdat-data.R')
+max_rad_km = 10
+res_m = 1000
+max_interp_dist_km = 1000
+proj = '32616'
+aoi = NULL;
+mods=radius_models
+trk = load_hurdat_track('R:/landscape_ecology/projects/hurrisk/data/hurdat2-1851-2020.txt',
+                        'AL142018')
+out = hurrecon_run(trk)

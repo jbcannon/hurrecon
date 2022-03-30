@@ -1,80 +1,79 @@
 #' @export
-get_Ha_Hv = function(t_spdf){
-  t_spdf$dt = paste0(t_spdf$date, t_spdf$time)
-  t_spdf$dt = as.POSIXct(t_spdf$dt, format= '%Y%m%d%H%M', tz = 'GMT')
-  t_spdf$Vh = 0
-  t_spdf$Ah = 0
-  for(i in 2:length(t_spdf)){
+get_Ha_Hv = function(trk){
+  trk$dt = paste0(trk$date, trk$time)
+  trk$dt = as.POSIXct(trk$dt, format= '%Y%m%d%H%M', tz = 'GMT')
+  trk$Vh = 0
+  trk$Ah = 0
+  for(i in 2:nrow(trk)){
     # calc distance between consecutive points
-    tmp = t_spdf[(i-1):i, ]
-    dist_m = max(raster::pointDistance(tmp))
+    tmp = trk[(i-1):i, ]
+    dist_m = max(sf::st_distance(tmp, by_element = FALSE))
     #Horizontal angle
-    coords = sp::coordinates(tmp)
+    coords = sf::st_coordinates(tmp)
     HA = apply(coords, 2, diff)
     HA = atan2(HA[1], HA[2])
-    t_spdf$Ah[i] = HA
+    trk$Ah[i] = HA
     # Horizontal velocity
-    tmp = tmp@data
     time_diff = as.numeric(diff(tmp$dt)*(60*60))
     Vh = dist_m / time_diff
-    t_spdf$Vh[i] = Vh
+    trk$Vh[i] = Vh
   }
-  return(t_spdf@data[, c('Ah', 'Vh')])
+  return(sf::st_drop_geometry(trk[, c('Ah', 'Vh')]))
 }
 
 #' @export
 hurrecon = function(track_densif, res_m, max_radius_km){
   ext = suppressWarnings(cumulative_extent(track_densif, res_m = res_m, max_radius_km = max_radius_km))
-  Vs_out = ext
-  D_out = ext
+  Vs_out = ext 
+  Vs_out[] = 0
   track_densif = subset(track_densif, max_speed >= 34)
   if(nrow(track_densif) < 1) return(list(Vs=Vs_out, D=D_out)) else {
     len = nrow(track_densif)
-    Vs_out[]=0
     for(i in 1:len){
       x = track_densif[i,]
       if(x$`50kt_ne` == 0 & x$`50kt_se` == 0 & x$`50kt_sw` == 0 & x$`50kt_nw` == 0) next
-      Vs_tmp = suppressWarnings(Vs(track_densif[i,], proj=proj, res_m = res_m, max_radius_km = max_radius_km, template=ext))
-      v = raster::extend(Vs_tmp$Vs, ext)
-      d = raster::extend(Vs_tmp$D, ext)
+      
+      # Left off here  3/28/2022
+      Vs_tmp = suppressWarnings(Vs(track_densif[i,], max_radius_km = max_radius_km, template=ext))
+      v = terra::extend(Vs_tmp$Vs, ext)
+      v[is.na(v)]= 0
       ismax = v > Vs_out
-      #update Vout and D with new max
-      Vs_out[ismax] = v[ismax]
-      D_out[ismax] = d[ismax]
+      Vs_out = (Vs_out * !ismax) + (v * ismax)
+
       cat(i, ' of ', len, ' (', round(i/len*100,1), '% complete)\n', sep = '')
     }
     return(list(Vs=Vs_out, D=D_out))  
   }
-  
 }
 
 find_densification = function(track_pts, max_dist_km){
   # Get maximum distance between points
-  d = as.matrix(dist(sp::coordinates(track_pts)))
-  d = d/1000
+  d = sf::st_distance(track_pts) / 1000
+
   #get distances between adjacent points
   if(nrow(d)>2) {x = diag(d[-1,-ncol(d)])} else {x = d[-1,-ncol(d)]}
   densification_factor = ceiling(x/max_dist_km)
   return(densification_factor)
 }
 
-densify = function(track_pts, factor, land, proj){
+densify = function(track_pts, factor, land){
   constant_vars = c('track_id', 'track_name', 'date', 'time', 'record', 'status', 'lat', 'lon')
-  interpolate_vars = c('utmx', 'utmy', 'max_speed', 'min_press', grep('kt_', colnames(track_pts@data), value=TRUE), 'Ah', 'Vh')
+  interpolate_vars = c('utmx', 'utmy', 'max_speed', 'min_press', grep('kt_', colnames(track_pts), value=TRUE), 'Ah', 'Vh')
   out_pts = list()
   
-  for(i in 1:(length(track_pts)-1)){
-    local_factor = factor[i]
-    pair = track_pts[i:(i+1),]
+  for(i in 1:(nrow(track_pts)-1)){
+    local_factor = as.numeric(factor[i])
+    pair = sf::st_drop_geometry(track_pts[i:(i+1),])
     out_df = list()
     for(v in constant_vars){
-      x = data.frame(rep(pair@data[1,v], local_factor+1))
+      x = data.frame(rep(pair[1,v], local_factor+1))
+      x=t(x)
       colnames(x) = v
       out_df[[length(out_df)+1]] = x
     }
     for(v in interpolate_vars){
-      if(any(is.na(pair@data[,v]))) x= data.frame(rep(NA, local_factor+1)) else {
-        x = data.frame(approx(pair@data[,v], n = local_factor+1)$y)
+      if(any(is.na(pair[,v]))) x= data.frame(rep(NA, local_factor+1)) else {
+        x = data.frame(approx(pair[,v], n = local_factor+1)$y)
       }
       colnames(x) = v
       out_df[[length(out_df)+1]] = x
@@ -93,13 +92,12 @@ densify = function(track_pts, factor, land, proj){
   
   #convert to spdf
   coords = out_pts[, c('utmx', 'utmy')]
-  coords = sp::SpatialPoints(coords)
-  out_pts = sp::SpatialPointsDataFrame(coords, out_pts)
-  sp::proj4string(out_pts) = proj
+  out_pts[, c('spatialdatX', 'spatialdatY')] = coords
+  out_pts = sf::st_as_sf(out_pts, coords = c('spatialdatX', 'spatialdatY'), crs = sf::st_crs(trk))
   
-  out_pts$cov = 'W'
-  land_pts = out_pts[land,]
-  out_pts[row.names(land_pts), 'cov'] = 'L'
+  on_land = sf::st_intersects(out_pts, sf::st_transform(land, sf::st_crs(track_pts)), sparse=FALSE)
+  out_pts$cov = ifelse(on_land, 'L', 'W')
+  
   return(out_pts)
 }
 
@@ -157,17 +155,18 @@ get_B_coeff = function(profile){
 #' @export
 get_wind_profiles = function(obs){
   #convert values to numeric then to metric
-  for(i in grep('kt_|max_speed', colnames(obs@data), value = TRUE)){
-    obs@data[,i] = as.numeric(as.character(obs@data[,i]))
+  obs = sf::st_drop_geometry(obs)
+  for(i in grep('kt_|max_speed', colnames(obs), value = TRUE)){
+    obs[,i] = as.numeric(as.character(obs[,i]))
   } 
   obs$max_speed_ms = obs$max_speed * 0.514444 # convert knots to m/s
-  for(i in grep('kt_', colnames(obs@data), value = TRUE)) obs@data[,i] = obs@data[,i] *1.852   # convert nautical mi to km
+  for(i in grep('kt_', colnames(obs), value = TRUE)) obs[,i] = obs[,i] *1.852   # convert nautical mi to km
   
   # Get profile for each direction
-  Rm_ne = unlist(obs[, c('max_speed', grep('_ne', colnames(obs@data), value=TRUE))]@data)
-  Rm_se = unlist(obs[, c('max_speed', grep('_se', colnames(obs@data), value=TRUE))]@data)
-  Rm_nw = unlist(obs[, c('max_speed', grep('_nw', colnames(obs@data), value=TRUE))]@data)
-  Rm_sw = unlist(obs[, c('max_speed', grep('_sw', colnames(obs@data), value=TRUE))]@data)
+  Rm_ne = unlist(obs[, c('max_speed', grep('_ne', colnames(obs), value=TRUE))])
+  Rm_se = unlist(obs[, c('max_speed', grep('_se', colnames(obs), value=TRUE))])
+  Rm_nw = unlist(obs[, c('max_speed', grep('_nw', colnames(obs), value=TRUE))])
+  Rm_sw = unlist(obs[, c('max_speed', grep('_sw', colnames(obs), value=TRUE))])
   x = rbind(Rm_ne, Rm_se, Rm_nw, Rm_sw)
   
   # If there are 0 readings in some direction for 50kt, then use average readings
@@ -192,33 +191,31 @@ get_wind_profiles = function(obs){
 }
 
 #' @export
-Vs = function(obs, proj, template, max_radius_km, res_m){
+Vs = function(obs, template, max_radius_km){
   # Create blank raster centered over eye
   eye = obs
-  eye_ext = rgeos::gBuffer(eye, width = max_radius_km*1000)
+  eye_ext = sf::st_buffer(eye, dist = max_radius_km*1000)
   ex = template
-  ex = raster::crop(ex, raster::extent(eye_ext))
+  ex = terra::crop(ex, terra::ext(eye_ext))
   ex[] = 0
   
   #calculate radius and direction raster
-  R = raster::distanceFromPoints(ex,eye)
-  pts = as.data.frame(raster::rasterToPoints(ex))
+  R = terra::distance(ex, terra::vect(eye))
+  pts = tibble::as_tibble(terra::crds(R, df=TRUE))
   pts$x = pts$x-eye$utmx
   pts$y = pts$y-eye$utmy
-  pts = atan2(pts[,'y'], pts[,'x'])
   A = ex
-  A[] = pts
+  A[] = atan2(pts$y, pts$x)
   A = -A +2.5*pi
-  A[A >= 2*pi] = A[A>=2*pi] - 2*pi
+  A = terra::ifel(A>=2*pi, A-2*pi, A)
   T = ex
   T[]=eye$Ah
   T = T-A
-  T[T >= 2*pi] = T[T>=2*pi] - 2*pi
-  T[T < 0] = T[T<0] + 2*pi
-  
+  T = terra::ifel(T >= 2*pi, T - 2*pi, T)
+  T = terra::ifel(T < 0, T + 2*pi, T)
   wp = get_wind_profiles(obs)$summary
   
-  F = ifelse(obs$cov=='W', 1, 0.8)
+  F = as.numeric(ifelse(obs$cov=='W', 1, 0.8))
   
   Vs = list()
   for(d in c('ne', 'se', 'sw', 'nw')){
@@ -251,59 +248,73 @@ Vs = function(obs, proj, template, max_radius_km, res_m){
   Vs = Vs_out
   
   #Calculate wind direction
-  I = ifelse(eye$cov=='W', 20, 40)*pi/180
+  I = as.numeric(ifelse(eye$cov=='W', 20, 40)*pi/180)
   Az = A - pi
-  Az[Az < 0] = Az[Az< 0] + 2*pi
+  Az = terra::ifel(Az < 0, Az + 2*pi, Az)
   D = Az - pi - I
-  D[D<0] = D[D<0]+2*pi
-  
+  D = terra::ifel(D < 0, D + 2*pi, D)
   return(list(Vs=Vs,D=D))
 }
 
 #' @export
 cumulative_extent = function(track, res_m, max_radius_km){
-  track = rgeos::gBuffer(track, width=max_radius_km*1000)
-  trk_ext = raster::extent(track)
+  track = sf::st_buffer(track, dist=max_radius_km*1000)
+  trk_ext = terra::ext(track)
   trk_ext[c(1,3)] = floor(trk_ext[c(1,3)]/res_m)*res_m
   trk_ext[c(2,4)] = ceiling(trk_ext[c(2,4)]/res_m)*res_m
-  ex = raster::raster( resolution=res_m, ext=trk_ext)
-  sp::proj4string(ex) = suppressWarnings(sp::proj4string(track))
-  suppressWarnings(ex[] <- NA)
+  #ex = 
+  ex = terra::rast(trk_ext, resolution = res_m, 
+                crs = sf::st_crs(track, parameters=TRUE)$srid)
   return(ex)
 }
 
-size_pred = function(dat, mods) {
+size_pred = function(dat) {
   if(!exists('radius_models')) {stop('must first run \`data("radius_models\")\`')}
-  press_known = ifelse(as.numeric(dat$min_press) > 0,'p','np')
+  if(!exists('tab_asymmetry')) {stop('must first run \`data("radius_models\")\`')}
   
+  cat('Predicting hurricane size. See Cannon et al. for details\n')
+  
+  check_pred = function(v) {
+    df = sf::st_drop_geometry(dat)
+    x = dat$max_speed >= v
+    y = apply(sf::st_drop_geometry(dat[,paste0(v, 'kt_', c('ne', 'se', 'sw', 'nw'))]),1,mean) == -999
+    return(x & y)
+  }
+  
+  press_known = ifelse(dat$min_press > -999, 'p', 'np')
+  needs_pred = sapply(34, function(v) check_pred(v))
+    
   df = dat[, c('max_speed', 'min_press', 'lat')]
-  for(i in 1:3) df[, i] = as.numeric(df[,i])
+  df = sf::st_drop_geometry(df)
+  for(i in 1:3) df[, i] = as.numeric(unlist(df[,i]))
   #predict inner-most windspeed
-  r34 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>34, predict(mods[[1]][[press_known[i]]], df[i,]),0))
-  r50 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>50, predict(mods[[2]][[press_known[i]]], df[i,]),0))
-  r64 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>64, predict(mods[[3]][[press_known[i]]], df[i,]),0))
-  
-  # predict outwind speeds from inner if availabile
-  #sapply(r64, function(i) if(r64))
-  
-  r50 = sapply(1:length(r64), function(i) if(r64[i] > 0) 1.521*r64[i]+15.834 else r50[i])
-  r34 = sapply(1:length(r50), function(i) if(r50[i] > 0) 1.521*r50[i]+15.834 else r34[i])
+  r34 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>34, predict(radius_models[[1]][[press_known[i]]], df[i,]),0))
+  r50 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>50, predict(radius_models[[2]][[press_known[i]]], df[i,]),0))
+  r64 = sapply(1:nrow(df), function(i) ifelse(df$max_speed[i]>64, predict(radius_models[[3]][[press_known[i]]], df[i,]),0))
   size = list(r34=r34, r50=r50, r64=r64)
   
   #apply assymtry factors
-  assym = c(1.28, 1.11, 0.69, 0.91)
+  assym = tab_asymmetry$ratio_mn
   out = list()
   for(i in 1:3){
       x = size[[i]]
       x = do.call(rbind, lapply(x, function(i) i*assym))
-      x = as.data.frame(x)
-      colnams = paste0(substr(names(size)[i],2,3), 'kt_', c('ne', 'se','sw', 'nw'))
+      x = tibble::as_tibble(x)
+      colnams = paste0(substr(names(size)[i],2,3), 'kt_', tab_asymmetry$direction)
       colnames(x) = colnams
       out[[length(out)+1]] = x
   }
+  out = tibble::as_tibble(do.call(cbind, out))
   
-  out = do.call(cbind, out)
-  return(out)
+  x = expand.grid(x=c(34,50,64), y=c('ne','nw','se','sw'));x= x[order(x$x),]
+  col_replace = with(x, paste0(x,'kt_',y))
+  input = sf::st_drop_geometry(dplyr::select(dat, col_replace))
+  
+  dat = dplyr::select(dat, -col_replace)
+  for(i in which(needs_pred)) input[i,] = out[i,]
+  dat = dplyr::bind_cols(dat, input)
+
+  return(dat)
 }
 
 #' Function to fit HURRECON wind profile as a function 

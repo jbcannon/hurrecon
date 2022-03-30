@@ -43,7 +43,6 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   if(!val) stop('trk does not appear to contain valid columns. Load track with load_hurdat_track')
   
   if(!'land' %in% ls()) {
-    cat('must run `data(\'geographic\')` to load land object')
     data('geographic')
   }
   
@@ -62,24 +61,8 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   if(is.null(aoi)) {
     track_densif_aoi = track_densif
     } else {
-      track_densif_aoi = sp::st_intersect(track_densif, aoi)
+      track_densif_aoi = sf::st_intersection(track_densif, sf::st_transform(aoi, sf::st_crs(trk)))
     }
   hurrecon_out = hurrecon(track_densif_aoi, max_radius_km = max_rad_km, res_m = res_m)
   return(hurrecon_out)
 }
-
-
-
-#load('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/data/geographic.RData')
-##load('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/data/radius_models.RData')
-#source('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/R/support-fxns.R')
-#source('C:/Users/jeffery.cannon/Documents/GitHub/hurrecon/R/load-parse-hurdat-data.R')
-#max_rad_km = 10
-#res_m = 1000
-#max_interp_dist_km = 1000
-#proj = '32616'
-#aoi = NULL;
-#mods=radius_models
-#hurrecon::fetch_best_tracks_data('C:/U
-#trk = load_hurdat_track('R:/landscape_ecology/projects/hurrisk/data/hurdat2-1851-2020.txt','AL142018')
-#out = hurrecon_run(trk)

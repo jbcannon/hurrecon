@@ -42,7 +42,7 @@ hurrecon = function(track_densif, res_m, max_radius_km){
 
       cat(i, ' of ', len, ' (', round(i/len*100,1), '% complete)\n', sep = '')
     }
-    return(list(Vs=Vs_out, D=D_out))  
+    return(Vs_out)  
   }
 }
 

@@ -99,10 +99,10 @@ densify = function(track_pts, factor, land){
     out_pts = do.call(getfun('dplyr::bind_rows'), out_pts)
   }
   
-  #convert to spdf
+  #convert to sf
   coords = out_pts[, c('utmx', 'utmy')]
   out_pts[, c('spatialdatX', 'spatialdatY')] = coords
-  out_pts = sf::st_as_sf(out_pts, coords = c('spatialdatX', 'spatialdatY'), crs = sf::st_crs(trk))
+  out_pts = sf::st_as_sf(out_pts, coords = c('spatialdatX', 'spatialdatY'), crs = sf::st_crs(track_pts))
   
   on_land = sf::st_intersects(out_pts, sf::st_transform(land, sf::st_crs(track_pts)), sparse=FALSE)
   out_pts$cov = ifelse(on_land, 'L', 'W')

@@ -74,14 +74,14 @@ densify = function(track_pts, factor, land){
     pair = sf::st_drop_geometry(track_pts[i:(i+1),])
     out_df = list()
     for(v in constant_vars){
-      x = tibble::tibble(rep(pair[1,v], local_factor+1))
+      x = data.frame(rep(pair[1,v], local_factor+1))
       x=t(x)
       colnames(x) = v
       out_df[[length(out_df)+1]] = x
     }
     for(v in interpolate_vars){
       if(any(is.na(pair[,v]))) x= tibble::tibble(rep(NA, local_factor+1)) else {
-        x = tibble::tibble(approx(pair[,v], n = local_factor+1)$y)
+        x = data.frame(approx(pair[,v], n = local_factor+1)$y)
       }
       colnames(x) = v
       out_df[[length(out_df)+1]] = x

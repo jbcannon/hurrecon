@@ -10,8 +10,7 @@ hurrecon_run(
   res_m = 500,
   max_interp_dist_km = 1,
   proj = "32616",
-  aoi = NULL,
-  mods = radius_models
+  aoi = NULL
 )
 }
 \arguments{

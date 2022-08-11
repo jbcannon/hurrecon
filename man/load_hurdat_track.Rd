@@ -2,7 +2,7 @@
 % Please edit documentation in R/load-parse-hurdat-data.R
 \name{load_hurdat_track}
 \alias{load_hurdat_track}
-\title{Load Full Track and Return as Spatial Points Dataframe}
+\title{Load Full Track and Return as POINT simple feature}
 \usage{
 load_hurdat_track(path, trackID, proj = 32616)
 }
@@ -11,10 +11,10 @@ load_hurdat_track(path, trackID, proj = 32616)
 
 \item{trackID}{string: trackID from HURDAT database (e.g., AL122018 indicates Hurricane Michael, the twelfth Atlantic hurricane of the 2018 season)}
 
-\item{proj}{output CRS for Spatial Points Dataframe. Must be a projection coordinate system (e.g., UTM) for distance-based calculations}
+\item{proj}{output CRS for feature. Must be a projection coordinate system (e.g., UTM) for distance-based calculations}
 }
 \description{
-This function returns an attributed shapefile containing tropical cyclone positions
+This function returns an attributed feature containing tropical cyclone positions
 and attributes from HURDAT2 database.
 }
 \examples{

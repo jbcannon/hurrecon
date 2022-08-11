@@ -66,7 +66,8 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   if(is.null(aoi)) {
     track_densif_aoi = track_densif
     } else {
-      track_densif_aoi = sf::st_intersection(track_densif, sf::st_transform(aoi, sf::st_crs(trk)))
+      track_densif_aoi = sf::st_intersection(track_densif,
+                                             sf::st_transform(aoi, sf::st_crs(trk)))
       colnames(track_densif_aoi) = gsub('^X', '', colnames(track_densif_aoi))
     }
   hurrecon_out = hurrecon(track_densif_aoi, max_radius_km = max_rad_km, res_m = res_m)

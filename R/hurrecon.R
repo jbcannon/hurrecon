@@ -43,11 +43,11 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   if(!val) stop('trk does not appear to contain valid columns. Load track with load_hurdat_track')
   
   if(!'land' %in% ls()) {
-    data('geographic')
+    data('geographic', package = 'hurrecon')
   }
   
   if(!'radius_models' %in% ls()) {
-    data('radius_models')
+    data('radius_models', package = 'hurrecon')
   }
   
   # Check if there are missing values in size prediction

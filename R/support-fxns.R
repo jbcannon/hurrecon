@@ -74,13 +74,13 @@ densify = function(track_pts, factor, land){
     pair = sf::st_drop_geometry(track_pts[i:(i+1),])
     out_df = list()
     for(v in constant_vars){
-      x = data.frame(rep(pair[1,v], local_factor+1))
+      x = tibble::tibble(rep(pair[1,v], local_factor+1))
       x=t(x)
       colnames(x) = v
       out_df[[length(out_df)+1]] = x
     }
     for(v in interpolate_vars){
-      if(any(is.na(pair[,v]))) x= data.frame(rep(NA, local_factor+1)) else {
+      if(any(is.na(pair[,v]))) x= tibble::tibble(rep(NA, local_factor+1)) else {
         x = tibble::tibble(approx(pair[,v], n = local_factor+1)$y)
       }
       colnames(x) = v
@@ -193,9 +193,9 @@ get_wind_profiles = function(obs){
   
   x = rbind(ne$coeff,se$coeff,nw$coeff,sw$coeff)
   x= cbind(data.frame(dir=c('ne','se','nw','sw')), x)
-  
+  x = tibble::as_tibble(x)
   out2 = rbind(ne$profile, se$profile, nw$profile, sw$profile)
-  
+  out2 = tibble::as_tibble(out2)
   return(list(summary=x, profiles=out2))
 }
 

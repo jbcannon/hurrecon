@@ -134,7 +134,7 @@ get_B_coeff = function(profile){
   profile = data.frame(V = c(34, 50, 64)/max_speed , R = c(profile[2:4]))
   if(profile[2,2] == 0) {return(data.frame(B=NA, Rm_km = NA, Vm_ms = max_speed))}
   if(profile[3,2] == 0) profile = profile[1:2,]
-  profile = rbind(data.frame(V=0, R=0), profile)
+  profile = rbind(data.frame(V=0, R=0.1), profile)
   mod = try(nls(V ~ wind_profile_fxn(R, Rm, B),
                 data = profile,
                 start = list(B = 0.5, Rm = 10),

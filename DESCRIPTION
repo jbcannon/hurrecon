@@ -13,4 +13,4 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-Imports: raster, sp, rgeos
+Imports: terra, tibble, sf

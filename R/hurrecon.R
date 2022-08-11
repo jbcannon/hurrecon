@@ -1,6 +1,6 @@
 #' Run HURRECON model for single Hurricane Track
-#' 
-#' This function takes a single hurricane track from `load_hurdat_track` and 
+#'
+#' This function takes a single hurricane track from `load_hurdat_track` and
 #' estimates a wind field producing the maximum sustained wind (`Vs` in ms^-1)
 #' and direction of maximum wind speed (`d` in radians)
 #' @examples
@@ -8,20 +8,20 @@
 #' library(terra)
 #' library(hurrecon)
 #' data("geographic")
-#' 
+#'
 #' path = 'hurdat_data.csv'
 #' fetch_best_tracks_data(path)
-#' 
+#'
 #' # load data for trackID AL142018 (Hurricane Michael)
 #' track = load_hurdat_track(path, trackID = 'AL142018')
-#'  
+#'
 #' # Quick one for example
 #' output = hurrecon_run(track, land=land, max_rad_km = 100, res_m = 500, max_interp_dist_km = 50)
 #' plot(land)
 #' plot(output, add = TRUE)
 #' plot(land)
-#' 
-#' @param trk SpatialPointsDataFrame of single track data returned from `load_hurdat_track` 
+#'
+#' @param trk SpatialPointsDataFrame of single track data returned from `load_hurdat_track`
 #' @param max_rad_km integer: maximum distance away from eye to model windspeed
 #' @param res_m integer: spatial resolution of output raster
 #' @param max_interp_dist_km integer: with more than one observation, `max_interp_dist_km`
@@ -39,18 +39,18 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   # check that track is valid
   val = all(class(trk) == c('sf', 'tbl_df', 'tbl', 'data.frame'))
   if(!val) stop('trk must be a valid sf object from load_hurdat_track')
-  
+
   val = all(c('track_id', 'record', 'time', 'lon', '34kt_se') %in% colnames(trk))
   if(!val) stop('trk does not appear to contain valid columns. Load track with load_hurdat_track')
-  
+
   if(!'land' %in% ls()) {
     data('geographic', package = 'hurrecon')
   }
-  
+
   if(!'radius_models' %in% ls()) {
     data('radius_models', package = 'hurrecon')
   }
-  
+
   # Check if there are missing values in size prediction
   needs_pred = apply(dplyr::select(sf::st_drop_geometry(trk), contains('34') | contains('50') | contains('64')), 1, function(x) any(x<0)) & trk$max_speed >= 34
   if(any(needs_pred)) stop('Missing size data in some tracks, us gap fill size information containng value -999')
@@ -60,13 +60,14 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   #Add movement columns
   movement = get_Ha_Hv(trk)
   trk = dplyr::bind_cols(trk, movement)
-  
+
   dens_fact = find_densification(trk, max_interp_dist_km);
   track_densif = densify(trk, dens_fact, land)
   if(is.null(aoi)) {
     track_densif_aoi = track_densif
     } else {
       track_densif_aoi = sf::st_intersection(track_densif, sf::st_transform(aoi, sf::st_crs(trk)))
+      colnames(track_densif_aoi) = gsub('^X', '', colnames(track_densif_aoi))
     }
   hurrecon_out = hurrecon(track_densif_aoi, max_radius_km = max_rad_km, res_m = res_m)
   return(hurrecon_out)

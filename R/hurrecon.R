@@ -5,20 +5,21 @@
 #' and direction of maximum wind speed (`d` in radians)
 #' @examples
 #' # Download recent data from HURDAT2 (NOAA)
+#' library(terra)
+#' library(hurrecon)
+#' data("geographic")
+#' 
 #' path = 'hurdat_data.csv'
 #' fetch_best_tracks_data(path)
 #' 
 #' # load data for trackID AL142018 (Hurricane Michael)
 #' track = load_hurdat_track(path, trackID = 'AL142018')
-#' 
-#' # Retrieve a US shapefile and project to UTM16
-#' library(maptools)
-#' data("wrld_simpl")
-#' us = wrld_simpl['USA',]
-#' us = spTransform(us, '+init=epsg:32616')
-#' 
-#' output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
-#' raster::plot(output_raster)
+#'  
+#' # Quick one for example
+#' output = hurrecon_run(track, land=land, max_rad_km = 100, res_m = 500, max_interp_dist_km = 50)
+#' plot(land)
+#' plot(output, add = TRUE)
+#' plot(land)
 #' 
 #' @param trk SpatialPointsDataFrame of single track data returned from `load_hurdat_track` 
 #' @param max_rad_km integer: maximum distance away from eye to model windspeed

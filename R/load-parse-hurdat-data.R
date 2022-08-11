@@ -6,20 +6,21 @@
 #' and [metadata](https://www.nhc.noaa.gov/data/hurdat/hurdat2-format-nov2019.pdf) for the HURDAT2 database
 #' @examples
 #' # Download recent data from HURDAT2 (NOAA)
+#' library(terra)
+#' library(hurrecon)
+#' data("geographic")
+#' 
 #' path = 'hurdat_data.csv'
 #' fetch_best_tracks_data(path)
 #' 
 #' # load data for trackID AL142018 (Hurricane Michael)
 #' track = load_hurdat_track(path, trackID = 'AL142018')
-#' 
-#' # Retrieve a US shapefile and project to UTM16
-#' library(maptools)
-#' data("wrld_simpl")
-#' us = wrld_simpl['USA',]
-#' us = spTransform(us, '+init=epsg:32616')
-#' 
-#' output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
-#' raster::plot(output_raster)
+#'  
+#' # Quick one for example
+#' output = hurrecon_run(track, land=land, max_rad_km = 100, res_m = 500, max_interp_dist_km = 50)
+#' plot(land)
+#' plot(output, add = TRUE)
+#' plot(land)
 #' 
 #' @param path character: the path to output downloaded data (*.csv)
 #' @param src character: the path to most recent HURDAT2 Best tracks data. May need updating each year.
@@ -76,21 +77,22 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
 #' This function returns an attributed feature containing tropical cyclone positions
 #' and attributes from HURDAT2 database.
 #' @examples
-#' #' # Download recent data from HURDAT2 (NOAA)
+#' # Download recent data from HURDAT2 (NOAA)
+#' library(terra)
+#' library(hurrecon)
+#' data("geographic")
+#' 
 #' path = 'hurdat_data.csv'
 #' fetch_best_tracks_data(path)
 #' 
 #' # load data for trackID AL142018 (Hurricane Michael)
 #' track = load_hurdat_track(path, trackID = 'AL142018')
-#' 
-#' # Retrieve a US shapefile and project to UTM16
-#' library(maptools)
-#' data("wrld_simpl")
-#' us = wrld_simpl['USA',]
-#' us = spTransform(us, '+init=epsg:32616')
-#' 
-#' output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
-#' raster::plot(output_raster)
+#'  
+#' # Quick one for example
+#' output = hurrecon_run(track, land=land, max_rad_km = 100, res_m = 500, max_interp_dist_km = 50)
+#' plot(land)
+#' plot(output, add = TRUE)
+#' plot(land)
 #' 
 #' @param path character: path to parsed HURDAT2 database downloaded using `fetch_best_tracks_data()`.
 #' @param trackID string: trackID from HURDAT database (e.g., AL122018 indicates Hurricane Michael, the twelfth Atlantic hurricane of the 2018 season)

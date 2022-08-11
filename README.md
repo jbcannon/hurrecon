@@ -22,25 +22,20 @@ devtools::install_github('jbcannon/hurrecon')
 `hurrecon` can be used both to download data from the NOAA best tracks database, and process a hurricane track. Below is example usage.
 
 ```
-# Download recent data from HURDAT2 (NOAA)
+library(terra)
 library(hurrecon)
-path = 'hurdat_data.csv'  #path to output downloaded data
+data("geographic")
+
+# Download recent data from HURDAT2 (NOAA)
+path = 'hurdat_data.csv'
 fetch_best_tracks_data(path)
 
 # load data for trackID AL142018 (Hurricane Michael)
 track = load_hurdat_track(path, trackID = 'AL142018')
-
-# A shapefile representing "land" is needed as an input to reduce surface wind speeds over land
-# Retrieve a US shapefile and project to UTM16
-library(maptools)
-library(sp)
-data("wrld_simpl")
-us = wrld_simpl['USA',]
-us = spTransform(us, '+init=epsg:32616')
-sp::plot(track)
-sp::plot(us, add=TRUE)
  
-output_raster = hurrecon_run(track, land=us, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1)
-library(raster)
-plot(output_raster$Vs)
+# Quick one for example
+output = hurrecon_run(track, land=land, max_rad_km = 100, res_m = 500, max_interp_dist_km = 50)
+plot(land)
+plot(output, add = TRUE)
+plot(land)
 ```

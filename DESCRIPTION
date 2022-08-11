@@ -1,10 +1,12 @@
 Package: hurrecon
+Type: Package
 Title: Model Hurricane Wind Fields Using HURRECON model
-Version: 0.0.0.9000
-Authors@R: 
+Version: 0.1.0
+Authos@R: 
     person("Jeffery B.", "Cannon", email = "jeffery.cannon@jonesctr.org", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-8436-8712"))
-Description: The purpose of this package is to implement the HURRECON model described in Boose et al. XXXX. The model uses observations of hurricane location, maximum wind speeds, and radius at which particular wind speeds occur from the NOAA HURDAT2 database. The model provides functions to gap fill between 6-hour observations, fit wind profiles from HURDAT observations, and generate rasters of maximum wind speed and direction of maximum wind speed continuously along the hurricane track. 
+Maintainer: Jeffery B Cannon <jeffery.cannon@jonesctr.org>
+Description: The purpose of this package is to implement the HURRECON model described in Boose et al. 2001. The model uses observations of hurricane location, maximum wind speeds, and radius at which particular wind speeds occur from the NOAA HURDAT2 database. The model provides functions to gap fill between 6-hour observations, fit wind profiles from HURDAT observations, and generate rasters of maximum wind speed and direction of maximum wind speed continuously along the hurricane track. 
 License: `use_mit_license()`
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -13,4 +15,5 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+LazyData: true
 Imports: terra, tibble, sf

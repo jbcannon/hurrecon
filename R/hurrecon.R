@@ -34,7 +34,7 @@
 #' to limit results for a specific spatial region (county, state, country, etc.). Must be
 #' in same projection as `trk`.
 #' @export
-hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1, proj = '32616',aoi = NULL, mods=radius_models) {
+hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km = 1, proj = '32616',aoi = NULL) {
   # check that track is valid
   val = all(class(trk) == c('sf', 'tbl_df', 'tbl', 'data.frame'))
   if(!val) stop('trk must be a valid sf object from load_hurdat_track')
@@ -44,6 +44,10 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   
   if(!'land' %in% ls()) {
     data('geographic')
+  }
+  
+  if(!'radius_models' %in% ls()) {
+    data('radius_models')
   }
   
   # Check if there are missing values in size prediction

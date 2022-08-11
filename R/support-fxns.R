@@ -33,7 +33,6 @@ hurrecon = function(track_densif, res_m, max_radius_km){
       x = track_densif[i,]
       if(x$`50kt_ne` == 0 & x$`50kt_se` == 0 & x$`50kt_sw` == 0 & x$`50kt_nw` == 0) next
       
-      # Left off here  3/28/2022
       Vs_tmp = suppressWarnings(Vs(track_densif[i,], max_radius_km = max_radius_km, template=ext))
       v = terra::extend(Vs_tmp$Vs, ext)
       v[is.na(v)]= 0
@@ -43,6 +42,15 @@ hurrecon = function(track_densif, res_m, max_radius_km){
       cat(i, ' of ', len, ' (', round(i/len*100,1), '% complete)\n', sep = '')
     }
     return(Vs_out)  
+  }
+}
+
+getfun<-function(x) {
+  if(length(grep("::", x))>0) {
+    parts<-strsplit(x, "::")[[1]]
+    getExportedValue(parts[1], parts[2])
+  } else {
+    x
   }
 }
 
@@ -73,12 +81,13 @@ densify = function(track_pts, factor, land){
     }
     for(v in interpolate_vars){
       if(any(is.na(pair[,v]))) x= data.frame(rep(NA, local_factor+1)) else {
-        x = data.frame(approx(pair[,v], n = local_factor+1)$y)
+        x = tibble::tibble(approx(pair[,v], n = local_factor+1)$y)
       }
       colnames(x) = v
       out_df[[length(out_df)+1]] = x
     }
-    out_df = do.call('cbind', out_df)
+
+    out_df = do.call(getfun('dplyr::bind_cols'), out_df)    
     out_pts[[length(out_pts)+1]] = out_df
   }
   
@@ -87,7 +96,7 @@ densify = function(track_pts, factor, land){
     for(i in 2:length(out_pts)){
       out_pts[[i]] = out_pts[[i]][-1,]
     }
-    out_pts = do.call(rbind, out_pts)
+    out_pts = do.call(getfun('dplyr::bind_rows'), out_pts)
   }
   
   #convert to spdf

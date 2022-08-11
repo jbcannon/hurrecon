@@ -52,11 +52,11 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
                        '34kt_ne', '34kt_se', '34kt_sw', '34kt_nw',
                        '50kt_ne', '50kt_se', '50kt_sw', '50kt_nw',
                        '64kt_ne', '64kt_se', '64kt_sw', '64kt_nw')
-    body = as.data.frame(body)
+    body = tibble::as_tibble(body)
     body$lat = ifelse(grepl('N', body$lat), gsub('N', '', body$lat), paste0('-',gsub('S', '', body$lat)))
     body$lon = ifelse(grepl('E', body$lon), gsub('E', '', body$lon), paste0('-',gsub('W', '', body$lon)))
-    hd = data.frame(track_id = track_id, track_name = track_name)
-    track_info = cbind(hd, body)
+    hd = tibble::tibble(track_id = track_id, track_name = track_name)
+    track_info = dplyr::bind_cols(hd,body)
     parsed_data[[length(parsed_data)+1]] = track_info
     curr_yr = substr(track_info$date[1],1,4)
     i = i + rows_to_follow + 1
@@ -67,12 +67,13 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
   }
   cat('writing best tracks to disk\n', path,'\n')
   out_data = do.call(rbind, parsed_data)
-  write.csv(out_data, path, row.names=FALSE)
+  readr::write_csv(out_data, path)
+  return(out_data)
 }
 
-#' Load Full Track and Return as Spatial Points Dataframe
+#' Load Full Track and Return as POINT simple feature
 #' 
-#' This function returns an attributed shapefile containing tropical cyclone positions
+#' This function returns an attributed feature containing tropical cyclone positions
 #' and attributes from HURDAT2 database.
 #' @examples
 #' #' # Download recent data from HURDAT2 (NOAA)
@@ -93,7 +94,7 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
 #' 
 #' @param path character: path to parsed HURDAT2 database downloaded using `fetch_best_tracks_data()`.
 #' @param trackID string: trackID from HURDAT database (e.g., AL122018 indicates Hurricane Michael, the twelfth Atlantic hurricane of the 2018 season)
-#' @param proj output CRS for Spatial Points Dataframe. Must be a projection coordinate system (e.g., UTM) for distance-based calculations
+#' @param proj output CRS for feature. Must be a projection coordinate system (e.g., UTM) for distance-based calculations
 #' @export
 
 load_hurdat_track = function(path, trackID, proj=32616) {
@@ -111,7 +112,6 @@ load_hurdat_track = function(path, trackID, proj=32616) {
   if(!crs_valid) stop('proj = ', as.character(proj), ' invalid. Use EPSG code (e.g., 32616)')
   
   db = dplyr::filter(db,  track_id %in% trackID)
-  colnames(db) = stringr::str_replace(colnames(db), 'X*', '')
   db[, c('lon2', 'lat2')] = db[, c('lon', 'lat')]
   output = sf::st_as_sf(db, coords = c('lon2', 'lat2'), crs=4326)
   output = sf::st_transform(output, crs = proj)

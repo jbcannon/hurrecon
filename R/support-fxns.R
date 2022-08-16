@@ -141,7 +141,12 @@ get_B_coeff = function(profile){
                 algorithm = 'port', lower = c(0.1,1), upper = c(4,200),
                 control = nls.control(maxiter=1000)), silent = TRUE)
   if('try-error' %in% class(mod)) {
-    coeff = c(NA, NA)
+    mod = try(nls(V ~ wind_profile_fxn(R, Rm, B),
+                  data = profile,
+                  start = list(B = 0.5, Rm = 1),
+                  algorithm = 'port', lower = c(0.1,1), upper = c(4,200),
+                  control = nls.control(maxiter=1000)), silent = TRUE)
+    if('try-error' %in% class(mod)) {coeff = c(NA, NA)} else coeff = coef(mod)
   } else {
     coeff = coef(mod)
   }

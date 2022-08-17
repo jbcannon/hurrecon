@@ -1,6 +1,6 @@
 # Model Hurricane Wind Fields Using HURRECON
 
-<img src=img/katrina.png width=200 align=right>
+<img src=img/katrina.png width=400 align=center><br>
 
 The purpose of this package is to implement the HURRECON model described in Boose et al. 2001. The model uses observations of hurricane location, maximum wind speeds, and radius at which particular wind speeds occur from the NOAA HURDAT2 database. The model provides functions to gap fill between 6-hour observations, fit wind profiles from HURDAT observations, and generate rasters of maximum wind speed and direction of maximum wind speed continuously along the hurricane track. 
 

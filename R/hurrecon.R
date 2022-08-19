@@ -52,7 +52,8 @@ hurrecon_run = function(trk, max_rad_km = 100, res_m = 500, max_interp_dist_km =
   }
 
   # Check if there are missing values in size prediction
-  needs_pred = apply(dplyr::select(sf::st_drop_geometry(trk), contains('34') | contains('50') | contains('64')), 1, function(x) any(x<0)) & trk$max_speed >= 34
+  needs_pred = apply(dplyr::select(sf::st_drop_geometry(trk), contains('34') | contains('50') | contains('64')), 1, function(x) any(x==-999)) & trk$max_speed >= 34
+
   if(any(needs_pred)) stop('Missing size data in some tracks, us gap fill size information containng value -999')
   vars = grep('kt_', colnames(trk), value=TRUE)
   for(v in vars) trk[dplyr::pull(trk, v) == -999,v] = 0

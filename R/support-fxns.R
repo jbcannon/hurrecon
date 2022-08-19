@@ -138,7 +138,7 @@ get_B_coeff = function(profile){
   model_fit_found = FALSE
   j = 0
   pars = list(B=0.5, Rm=10)
-  while(!model_fit_found & j <= 2) {
+  while(!model_fit_found & j <= 5) {
     mod = try(nls(V ~ wind_profile_fxn(R, Rm, B),
                   data = profile,
                   start = list(B = pars$B, Rm = pars$Rm),
@@ -148,6 +148,9 @@ get_B_coeff = function(profile){
       if(j == 0) pars = list(B=0.5, Rm=1) # Try a few different starting points
       if(j == 1) pars = list(B=1, Rm=10)
       if(j == 2) pars = list(B=1, Rm=1)
+      if(j == 3) pars = list(B=1, Rm=20)
+      if(j == 4) pars = list(B=1, Rm=30)
+      if(j == 5) pars = list(B=0.5, Rm=20)
       j = j + 1
     }
   }

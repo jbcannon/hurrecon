@@ -190,7 +190,7 @@ get_wind_profiles = function(obs){
   x = rbind(Rm_ne, Rm_se, Rm_nw, Rm_sw)
 
   # If there are 0 readings in some direction for 50kt, then use average readings
-  if(any(x[,3] = 0)) {x[,2] = mean(x[,2]); x[,3] = mean(x[,3])}
+  if(any(x[,3] == 0)) {x[,2] = mean(x[,2]); x[,3] = mean(x[,3])}
 
   # if there are any negative readings in the third column, zero them out.
   x[, x[,3] < 0] = 0

@@ -135,21 +135,23 @@ get_B_coeff = function(profile){
   if(profile[2,2] == 0) {return(data.frame(B=NA, Rm_km = NA, Vm_ms = max_speed))}
   if(profile[3,2] == 0) profile = profile[1:2,]
   profile = rbind(data.frame(V=0, R=0.1), profile)
-  mod = try(nls(V ~ wind_profile_fxn(R, Rm, B),
-                data = profile,
-                start = list(B = 0.5, Rm = 10),
-                algorithm = 'port', lower = c(0.1,1), upper = c(4,200),
-                control = nls.control(maxiter=1000)), silent = TRUE)
-  if('try-error' %in% class(mod)) {
+  model_fit_found = FALSE
+  j = 0
+  pars = list(B=0.5, Rm=10)
+  while(!model_fit_found & j <= 2) {
     mod = try(nls(V ~ wind_profile_fxn(R, Rm, B),
                   data = profile,
-                  start = list(B = 0.5, Rm = 1),
+                  start = list(B = pars$B, Rm = pars$Rm),
                   algorithm = 'port', lower = c(0.1,1), upper = c(4,200),
                   control = nls.control(maxiter=1000)), silent = TRUE)
-    if('try-error' %in% class(mod)) {coeff = c(NA, NA)} else coeff = coef(mod)
-  } else {
-    coeff = coef(mod)
+    if(!'try-error' %in% class(mod)) {model_fit_found = TRUE} else {
+      if(j == 0) pars = list(B=0.5, Rm=1) # Try a few different starting points
+      if(j == 1) pars = list(B=1, Rm=10)
+      if(j == 2) pars = list(B=1, Rm=1)
+      j = j + 1
+    }
   }
+  if(model_fit_found) {coeff = coef(mod)} else {coeff = c(NA, NA)}
   x = data.frame(B=coeff[1], Rm_km = coeff[2], Vm_ms = max_speed*0.51444)
   return(list(coeff=x, profile=profile))
 }

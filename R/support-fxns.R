@@ -193,7 +193,7 @@ get_wind_profiles = function(obs){
   if(any(x[,3] == 0)) {x[,2] = mean(x[,2]); x[,3] = mean(x[,3])}
 
   # if there are any negative readings in the third column, zero them out.
-  x[, x[,3] < 0] = 0
+  x[x[,4] < 0, 4] = 0
 
   ne = get_B_coeff(x[1,])
   se = get_B_coeff(x[2,])

@@ -50,7 +50,7 @@ fetch_best_tracks_data(path)
 
 # load data for trackID AL142018 (Hurricane Michael)
 track = load_hurdat_track(path, trackID = 'AL142018')
- 
+
 # Quick one for example
 output = hurrecon_run(track, land=land, max_rad_km = 100, res_m = 500, max_interp_dist_km = 50)
 plot(land)

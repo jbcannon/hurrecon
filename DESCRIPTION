@@ -2,7 +2,7 @@ Package: hurrecon
 Type: Package
 Title: Model Hurricane Wind Fields Using HURRECON model
 Version: 0.1.0
-Authos@R: 
+Author: 
     person("Jeffery B.", "Cannon", email = "jeffery.cannon@jonesctr.org", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-8436-8712"))
 Maintainer: Jeffery B Cannon <jeffery.cannon@jonesctr.org>

@@ -1,5 +1,5 @@
 #'  Fetch Best Tracks data from NOAA (HURDAT2)
-#' 
+#'
 #' This function is used to download, parse, and format the current tropical storm database
 #' (HURDAT2) from NOAA. The `src` parameter may need to be updated each year as the path
 #' to the input data is updated. Visit the NOAA website for full [data description](https://www.nhc.noaa.gov/data/#hurdat)
@@ -9,23 +9,23 @@
 #' library(terra)
 #' library(hurrecon)
 #' data("geographic")
-#' 
+#'
 #' path = 'hurdat_data.csv'
 #' fetch_best_tracks_data(path)
-#' 
+#'
 #' # load data for trackID AL142018 (Hurricane Michael)
 #' track = load_hurdat_track(path, trackID = 'AL142018')
-#'  
+#'
 #' # Quick one for example
 #' output = hurrecon_run(track, land=land, max_rad_km = 100, res_m = 500, max_interp_dist_km = 50)
 #' plot(land)
 #' plot(output, add = TRUE)
 #' plot(land)
-#' 
+#'
 #' @param path character: the path to output downloaded data (*.csv)
 #' @param src character: the path to most recent HURDAT2 Best tracks data. May need updating each year.
 #' @export
-fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hurdat/hurdat2-1851-2020-052921.txt') {
+fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hurdat/hurdat2-1851-2021-100522.txt') {
   if(!dir.exists(dirname(path))) {
     stop(paste0('directory', dirname(path), 'does not exist'))
   }
@@ -41,7 +41,7 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
     track_id = header[1]
     track_name = header[2]
     rows_to_follow = as.numeric(header[3])
-    body = data[(i+1):(i+rows_to_follow)] 
+    body = data[(i+1):(i+rows_to_follow)]
     body = strsplit(body, ',')
     body = lapply(body, trimws)
     body = lapply(body, function(x) x[1:20]) # Fix database error with extra comma
@@ -73,7 +73,7 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
 }
 
 #' Load Full Track and Return as POINT simple feature
-#' 
+#'
 #' This function returns an attributed feature containing tropical cyclone positions
 #' and attributes from HURDAT2 database.
 #' @examples
@@ -81,19 +81,19 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
 #' library(terra)
 #' library(hurrecon)
 #' data("geographic")
-#' 
+#'
 #' path = 'hurdat_data.csv'
 #' fetch_best_tracks_data(path)
-#' 
+#'
 #' # load data for trackID AL142018 (Hurricane Michael)
 #' track = load_hurdat_track(path, trackID = 'AL142018')
-#'  
+#'
 #' # Quick one for example
 #' output = hurrecon_run(track, land=land, max_rad_km = 100, res_m = 500, max_interp_dist_km = 50)
 #' plot(land)
 #' plot(output, add = TRUE)
 #' plot(land)
-#' 
+#'
 #' @param path character: path to parsed HURDAT2 database downloaded using `fetch_best_tracks_data()`.
 #' @param trackID string: trackID from HURDAT database (e.g., AL122018 indicates Hurricane Michael, the twelfth Atlantic hurricane of the 2018 season)
 #' @param proj output CRS for feature. Must be a projection coordinate system (e.g., UTM) for distance-based calculations
@@ -101,24 +101,24 @@ fetch_best_tracks_data = function(path, src = 'https://www.nhc.noaa.gov/data/hur
 
 load_hurdat_track = function(path, trackID, proj=32616) {
   db = suppressMessages(readr::read_csv(path))
-  
+
   if(length(trackID) > 1) stop('only one track_id allowed at a time')
-  valid = all(c('track_id', 'record', 'date', 'max_speed', 'status', 'lat') %in% colnames(db)) 
-  
+  valid = all(c('track_id', 'record', 'date', 'max_speed', 'status', 'lat') %in% colnames(db))
+
   if(!valid) stop('path does not appear to be valid HURDAT2 dataset. Use fetch_best_tracks_data() to download valid dataset')
   missing = !trackID %in% db$track_id
-  
+
   if(!trackID %in% db$track_id) stop('track', trackID, '\nmissing or invalid')
-  
+
   crs_valid = !is.na(sf::st_crs(proj)$input)
   if(!crs_valid) stop('proj = ', as.character(proj), ' invalid. Use EPSG code (e.g., 32616)')
-  
+
   db = dplyr::filter(db,  track_id %in% trackID)
   db[, c('lon2', 'lat2')] = db[, c('lon', 'lat')]
   output = sf::st_as_sf(db, coords = c('lon2', 'lat2'), crs=4326)
   output = sf::st_transform(output, crs = proj)
   output[, c('utmx', 'utmy')] = sf::st_coordinates(output)
-  
+
   # Check if there needs to be some gap filling
   yr = max(as.numeric(stringr::str_sub(output$date,1,4)))
   if(yr < 2004) {
